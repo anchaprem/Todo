@@ -417,59 +417,43 @@
     .todos-heading {
         font-size: 36px;
     }
-
+    
     .create-task-heading,
-    .create-task-heading-subpart,
-    .todo-items-heading,
-    .todo-items-heading-subpart {
+    .create-task-heading-subpart {
         font-size: 24px;
     }
-
+    
     .button {
-        width: 100%;
-        margin-top: 10px;
+        font-size: 16px;
     }
-
-    .notification {
-        left: 20px;
-        right: 20px;
-        text-align: center;
-    }
-
+    
     .todo-filters {
-        justify-content: center;
+        flex-wrap: wrap;
     }
     
     .filter-button {
-        flex: 1;
-        text-align: center;
+        font-size: 14px;
+        padding: 8px 12px;
     }
     
     .deadline-container {
         flex-direction: column;
-        align-items: stretch;
     }
-
+    
     .todo-deadline-input {
         width: 100%;
     }
-
+    
     .deadline-label {
-        text-align: center;
+        margin-bottom: 5px;
     }
-
+    
     .footer-content p {
         font-size: 14px;
     }
     
     .todos-bg-container {
-        padding-bottom: 120px;
-    }
-
-    .notification-status {
-        margin: 10px 0 0 0;
-        width: 100%;
-        justify-content: center;
+        padding: 15px;
     }
 }
 
