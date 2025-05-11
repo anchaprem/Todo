@@ -71,4 +71,4 @@ Created by [anchaprem](https://github.com/anchaprem)
 
 ## Contributing
 
-Contributions, issues, and feature requests are welcome! 
+Contributions, issues, and feature requests are welcome!
