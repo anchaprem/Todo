@@ -5,27 +5,6 @@ let todoUserInput = document.getElementById("todoUserInput");
 let todoDeadline = document.getElementById("todoDeadline");
 let filterButtons = document.querySelectorAll(".filter-button");
 
-// Request notification permission and handle it properly
-function requestNotificationPermission() {
-    if ("Notification" in window) {
-        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-            Notification.requestPermission().then(function(permission) {
-                if (permission === "granted") {
-                    showNotification("Notifications enabled! You'll be reminded of your tasks.");
-                    updateNotificationStatus();
-                } else {
-                    showNotification("Please enable notifications to get task reminders.");
-                }
-            });
-        }
-    } else {
-        showNotification("Your browser doesn't support notifications.");
-    }
-}
-
-// Call this when the app starts
-requestNotificationPermission();
-
 // Add enter key support
 todoUserInput.addEventListener("keypress", function(event) {
     if (event.key === "Enter") {
@@ -60,74 +39,11 @@ function autoSave() {
     localStorage.setItem("todoList", JSON.stringify(todoList));
 }
 
-function showNotification(message) {
-    const notification = document.createElement("div");
-    notification.className = "notification";
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    // Trigger animation
-    setTimeout(() => {
-        notification.classList.add("show");
-    }, 10);
-
-    // Remove notification after 3 seconds
-    setTimeout(() => {
-        notification.classList.remove("show");
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
-    }, 3000);
-}
-
-function showChromeNotification(title, options) {
-    if ("Notification" in window && Notification.permission === "granted") {
-        try {
-            // Add default options
-            const defaultOptions = {
-                icon: "/favicon-32x32.png", // Use absolute path for deployed site
-                badge: "/favicon-32x32.png", // Use absolute path for deployed site
-                requireInteraction: true, // Notification will stay until user interacts
-                vibrate: [200, 100, 200], // Vibration pattern for mobile devices
-                tag: "todo-notification", // Group similar notifications
-                renotify: true, // Allow multiple notifications
-                silent: false // Play notification sound
-            };
-
-            // Merge default options with provided options
-            const notificationOptions = { ...defaultOptions, ...options };
-
-            // Create and show notification
-            const notification = new Notification(title, notificationOptions);
-
-            // Handle notification click
-            notification.onclick = function() {
-                window.focus(); // Focus the window
-                notification.close(); // Close the notification
-            };
-
-            // Auto close after 10 seconds if not interacted with
-            setTimeout(() => {
-                notification.close();
-            }, 10000);
-
-            return notification;
-        } catch (error) {
-            console.error("Error showing notification:", error);
-            showNotification("Could not show notification. Please check your browser settings.");
-        }
-    } else if (Notification.permission !== "granted") {
-        showNotification("Please enable notifications to get task reminders.");
-        requestNotificationPermission();
-    }
-}
-
 function onAddTodo() {
     let userInputValue = todoUserInput.value.trim();
     let deadlineValue = todoDeadline.value;
 
     if (userInputValue === "") {
-        showNotification("Please enter a task!");
         return;
     }
 
@@ -146,55 +62,6 @@ function onAddTodo() {
     todoUserInput.value = "";
     todoDeadline.value = "";
     autoSave();
-    showNotification("Task added successfully!");
-
-    // Schedule notification if deadline is set
-    if (deadlineValue) {
-        scheduleNotification(newTodo);
-    }
-}
-
-function scheduleNotification(todo) {
-    if (!("Notification" in window) || Notification.permission !== "granted") {
-        return;
-    }
-
-    const deadline = new Date(todo.deadline);
-    const now = new Date();
-    const timeUntilDeadline = deadline - now;
-    const oneHourInMs = 60 * 60 * 1000; // 1 hour in milliseconds
-
-    // Only schedule notifications for uncompleted tasks
-    if (!todo.isChecked) {
-        // Schedule 1-hour reminder if deadline is more than 1 hour away
-        if (timeUntilDeadline > oneHourInMs) {
-            const reminderTime = timeUntilDeadline - oneHourInMs;
-            setTimeout(() => {
-                // Check if task is still uncompleted before sending notification
-                const currentTodo = todoList.find(t => t.uniqueNo === todo.uniqueNo);
-                if (currentTodo && !currentTodo.isChecked) {
-                    showChromeNotification("Task Reminder", {
-                        body: `"${todo.text}" is due in 1 hour!`,
-                        icon: "/favicon-32x32.png"
-                    });
-                }
-            }, reminderTime);
-        }
-
-        // Schedule deadline notification
-        if (timeUntilDeadline > 0) {
-            setTimeout(() => {
-                // Check if task is still uncompleted before sending notification
-                const currentTodo = todoList.find(t => t.uniqueNo === todo.uniqueNo);
-                if (currentTodo && !currentTodo.isChecked) {
-                    showChromeNotification("Task Deadline", {
-                        body: `"${todo.text}" is due now!`,
-                        icon: "/favicon-32x32.png"
-                    });
-                }
-            }, timeUntilDeadline);
-        }
-    }
 }
 
 addTodoButton.onclick = function() {
@@ -238,11 +105,6 @@ function onTodoStatusChange(checkboxId, labelId, todoId) {
         }
         
         autoSave();
-        
-        // Show notification when task is completed
-        if (checkboxElement.checked) {
-            showNotification("Task completed! 🎉");
-        }
     }
 }
 
@@ -263,7 +125,6 @@ function onDeleteTodo(todoId) {
 
         todoList.splice(deleteElementIndex, 1);
         autoSave();
-        showNotification("Task deleted successfully!");
     }, 300);
 }
 
@@ -385,7 +246,6 @@ function onEditTodo(todoId) {
         const newDeadline = editForm.querySelector(".edit-deadline").value;
 
         if (newText === "") {
-            showNotification("Task cannot be empty!");
             return;
         }
 
@@ -429,12 +289,6 @@ function onEditTodo(todoId) {
 
         // Save changes
         autoSave();
-        showNotification("Task updated successfully!");
-
-        // Reschedule notifications if deadline changed
-        if (newDeadline) {
-            scheduleNotification(todo);
-        }
     };
 
     // Handle cancel
@@ -550,9 +404,6 @@ function updateEmptyState() {
 // Initialize todos and set up initial filter
 for (let todo of todoList) {
     createAndAppendTodo(todo);
-    if (todo.deadline) {
-        scheduleNotification(todo);
-    }
 }
 
 // Initial empty state check with default filter
@@ -575,35 +426,3 @@ Array.prototype.splice = function() {
 
 // Update footer year
 document.querySelector('.footer-year').textContent = new Date().getFullYear();
-
-// Update notification status indicator
-function updateNotificationStatus() {
-    const existingStatus = document.querySelector(".notification-status");
-    if (existingStatus) {
-        existingStatus.remove();
-    }
-
-    const notificationStatus = document.createElement("div");
-    notificationStatus.className = "notification-status";
-    notificationStatus.innerHTML = `
-        <i class="fas ${Notification.permission === "granted" ? "fa-bell" : "fa-bell-slash"}"></i>
-        <span>${Notification.permission === "granted" ? "Notifications enabled" : "Notifications disabled"}</span>
-    `;
-    
-    // Add click handler to request permission if not granted
-    notificationStatus.onclick = function() {
-        if (Notification.permission !== "granted") {
-            requestNotificationPermission();
-        }
-    };
-
-    // Add to the page
-    const statusContainer = document.querySelector(".todos-heading");
-    statusContainer.appendChild(notificationStatus);
-}
-
-// Call this when the app starts
-document.addEventListener("DOMContentLoaded", function() {
-    requestNotificationPermission();
-    updateNotificationStatus();
-});
